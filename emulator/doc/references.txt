@@ -1,0 +1,39 @@
+Rust book
+https://doc.rust-lang.org/book/second-edition/index.html
+
+GB Emulator in RUST
+https://media.ccc.de/v/rustfest-rome-3-gameboy-emulator#t=467
+
+GBDev
+https://gbdev.io/
+
+Why did I spend 1.5 months creating a Gameboy emulator?
+https://blog.rekawek.eu/2017/02/09/coffee-gb/
+
+Ultimate Gameboy Talk
+https://www.youtube.com/watch?v=HyzD8pNlpwI
+
+Gameboy CPU Manual
+http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
+
+Gameboy written in RUST
+https://github.com/mvdnes/rboyrboy
+
+Most accurate GB emulator ever
+https://github.com/Gekkio/mooneye-gb
+
+GB emulator book
+https://github.com/rylev/DMG-01
+https://rylev.github.io/DMG-01/public/book/
+
+nintendo gb architecture
+http://meseec.ce.rit.edu/551-projects/spring2014/4-1.pdf
+
+gb cpu comparission with z80 cpu
+https://gbdev.gg8.se/wiki/articles/CPU_Comparision_with_Z80
+
+GB Cpu
+https://raphaelstaebler.medium.com/building-a-gameboy-from-scratch-part-2-the-cpu-d6986a5c6c74
+
+Reaktor mooneyegb Talk
+https://www.youtube.com/watch?v=2K5FIGQ2Hxk
