@@ -37,3 +37,9 @@ https://raphaelstaebler.medium.com/building-a-gameboy-from-scratch-part-2-the-cp
 
 Reaktor mooneyegb Talk
 https://www.youtube.com/watch?v=2K5FIGQ2Hxk
+
+
+https://yushiomote.org/posts/gameboy-emu
+
+Opcodes:
+https://meganesulli.com/blog/game-boy-opcodes/
