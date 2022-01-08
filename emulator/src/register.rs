@@ -99,6 +99,16 @@ impl registers {
         ((self.h as u16) << 8) | (self.l as u16)
     }
 
+    // not exactly sure this is the right implementation for the stack_pointer register
+    pub fn sp() -> u16 {
+        self.sp as u16
+    }
+
+    // not exactly sure this is the right implementation for the program_counter register
+    pub fn pc() -> u16 {
+        self.pc as u16
+    }
+
     // hl register Decrement
     pub fn hld() -> u16 {
         let res = self.hl();

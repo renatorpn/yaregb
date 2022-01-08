@@ -47,27 +47,37 @@ impl<'a> cpu<'a>{
         }
     }
 
-    fn fetch_next(&mut self) -> u8{
+    fn fetch_byte(&mut self) -> u8{
         let b = self.mmu.b(self.rg.pc);
-        self.rg.pc +=1
+        self.
+        rg.pc +=1
+    }
+
+    fn fetch_word(&mut self) -> u16{
+
+    }
+
+    fn read_memory(){
+
+    }
+
+    fn write_memory(){
+
     }
 
     // read about ref and & (https://doc.rust-lang.org/std/keyword.ref.html)
     fn load_cmd(&mut self, opcode: &OpCode) -> u8{
         match opcode{
             //these implementations are probably quite wrong... I have to check them later
-            
-            
-            //8 bit
-            //LD nn,n
+            //8 bit loads
+            //1. LD nn,n
             0x06 => reg.b = self.fetch_byte(),
             0x0E => reg.c = self.fetch_byte(),
             0x16 => reg.d = self.fetch_byte(),
             0x1E => reg.e = self.fetch_byte(),
             0x26 => reg.h = self.fetch_byte(),
             0x2E => reg.l = self.fetch_byte(),
-            
-            //LD r1,r2
+            //2. LD r1,r2
             0x7F => reg.a = reg.a,
             0x78 => reg.a = reg.b,
             0x79 => reg.a = reg.c,
@@ -125,15 +135,13 @@ impl<'a> cpu<'a>{
             0x74 => reg.hl = reg.h,
             0x75 => reg.hl = reg.l,
             0x36 => reg.hl = self.fetch_byte(),
-
-            //LD A,n
+            //3. LD A,n
             0x0A => reg.a = reg.bc,
             0x1A => reg.a = reg.de,
             0x7E => reg.a = reg.hl,
             0xFA => reg.a = self.fetch_word(),
             0x3E => reg.a = self.fetch_byte(),
-
-            //LD n,A
+            //4. LD n,A
             0x4F => reg.a = reg.c,
             0x5F => reg.a = reg.e,
             0x6F => reg.a = reg.l,
@@ -141,17 +149,78 @@ impl<'a> cpu<'a>{
             0x12 => reg.a = reg.de,
             0x77 => reg.a = reg.hl,
             0xEA => reg.a = self.fetch_word(),
+            //5. LD A,(C)
+            0xF2 => reg.a = self.read_memory(0xFF00 + reg.c),
+            //6. LD (C),A
+            0xE2 => self.write_memory(0xFF00 + reg.c, reg.a)
+            //7. LD A,(HLD)
+            //8. LD A,(HL-)
+            //9. LDD A,(HL)
+            0x3A => {
+                reg.a = self.read_memory(reg.hl),
+                reg.hl = self.hl.wrapping_sub(1)
+            },
+            //10. LD (HLD),A
+            //11. LD (HL-),A
+            //12. LDD (HL),A
+            0x32 => {
+                reg.hl = self.read_memory(reg.a),
+                reg.hl = self.hl.wrapping_sub(1)
 
-
-
-            0x01 => reg.setbc = self.fetch_next();
-            0x11 => reg.setde = self.fetch_next();
-            0x21 => reg.sethl = self.fetch_next();
-            0x31 => reg.sp = self.fetch_next();
+            },
+            //13. LD A,(HLI)
+            //14. LD A,(HL+)
+            //15. LD A,(HL-)
+            0x2A => {
+                reg.a = self.read_memory(reg.hl),
+                reg.hl = self.hl.wrapping_add(1)
+            },
+            //16. LD (HLI),A
+            //17. LD (HL+),A
+            //18. LDI (HL),A
+            0x22 => {
+                reg.hl = self.read_memory(reg.a),
+                reg.hl = self.hl.wrapping_add(1)
+            },
+            //19. LDH (n),A
+            0xE0 => self.write_memory(0xFF00 + self.fetch_byte()) = reg.a
+            //20. LDH A,(n)
+            0xF0 => reg.a = self.read_memory(0xFF00 + self.fetch_byte())
+            //16 bit Loads
+            //1. LD n,nn
+            0x01 => reg.setbc = self.fetch_word(),
+            0x11 => reg.setde = self.fetch_word(),
+            0x21 => reg.sethl = self.fetch_word(),
+            0x31 => reg.sp = self.fetch_word(),
+            //2. LD SP,HL
+            0xF9 => reg.sp = reg.hl
+            //These are way complex than I initially thought...
+            //see Line 1097: https://github.com/kbernst30/rusty-boy/blob/main/src/cpu.rs
+            //3. LD HL,SP+n
+            //4. LDHLD SP,n
+            0xF8 => reg.hl = reg.sp + self.fetch_byte();
+            //5. LD (nn),SP
+            0x08 => self.write_memory(self.fetch_word()) = reg.sp
+            //6. PUSH nn
+            0xF5 => self.push_cmd(reg.af),
+            0xC5 => self.push_cmd(reg.bc),
+            0xD5 => self.push_cmd(reg.de),
+            0xE5 => self.push_cmd(reg.hl),
+            //7. POP nn
+            0xF1 => self.pop_cmd(reg.af),
+            0xC1 => self.pop_cmd(reg.bc),
+            0xD1 => self.pop_cmd(reg.de),
+            0xE1 => self.pop_cmd(reg.hl),
+            //8 bit ALU
 
             
 
         }
+
+    }
+
+
+    fn push_cmd(){
 
     }
 
