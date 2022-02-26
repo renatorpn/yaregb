@@ -1,3 +1,10 @@
+use std::cmp;
+
+use crate::joypad::*;
+use crate::mbc::*;
+use crate::rom::*;
+use crate::utils::*;
+
 // this is the implementation of the memory management unit
 // mmu is the interface between cpu, ppu, spu and the memory. this is the control bus
 
@@ -25,14 +32,53 @@ const wram_size: usize = 0x8000;
 const zram_size: usize = 0x7f;
 
 pub struct mmu {
-    memory,
-    oam,
-    vram,
-    color_pallette,
-    rom,
-    joypad,
-    mbc
+    memory: [Byte; memory_size],
+    oam: bool,
+    vram: bool,
+    color_pallette: bool,
+    rom: Rom,
+    joypad: Joypad,
+    mbc: Option<Box<dyn Mbc>>
 }
+
+impl Mmu{
+
+    pub fn init(rom: Rom, joypad: Joypad) -> Mmu
+    {
+        Mmu{
+            memory: [0; memory_size],
+            oam: true,
+            vram: true,
+            color_pallette: true,
+            rom: rom,
+            joypad: joypad,
+            mbc: None     
+        }   
+    }
+
+    pub fn get_ext_ram(&self) -> &[Byte]{
+        match &self.mbc{
+            Some(mbc) => mbc.get_ext_ram();
+            None => format!("MBC Type: None"),
+        }
+    }
+
+    pub fn load_ext_ram(&self) -> &[Byte]{
+        match &mut self.mbc{
+            Some(mbc) => mbc.load_ext_ram(buffer),
+            None => {
+                let ram_length = 0xC000 - 0xA000;
+                for i in 0..cmp:min(ram_length, buffer.len()){
+                    self.memory[0xA000 + i] + buffer[i];
+                }
+            }
+        }
+
+    }
+
+}
+
+
 pub fn bus_read(&self, address:u16) -> u8{
     let address;
     if address < 0x8000 {
@@ -55,4 +101,8 @@ pub fn bus_write(&self, address:u16 ) -> u8{
     }else {
         self.memory[address as usize]
     }
+}
+
+pub fn reset(&mut self){
+
 }

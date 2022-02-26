@@ -1,9 +1,6 @@
 use crate::register::cpu_flags::{C, N, H, Z};
 use crate::register::registers;
-use crate::mmu::mmu;
-
-
-
+use crate::mmu::mmu;    
 
 pub struct cpu<'a>{
     reg: registers,
