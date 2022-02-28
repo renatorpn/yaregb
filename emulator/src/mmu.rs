@@ -135,6 +135,55 @@ impl Mmu{
         }
     }
 
+    pub fn write_byte(&mut self, addr: Word, data: Byte){
+        let is_writing_restricted_oam = addr >= 0xFE00 && addr <= 0xFE9F && !self.oam;
+        let is writing_restricted_vram = addr >= 0x8000 && addr <= 0x9FFF && !self.vram;
+
+        if !is_writing_restricted_oam && !is_writing_restricted_vram{
+            match addr {
+                0x0000..=0x7FFF => self.handle_bank(addr, data),
+                0x8000..=0x9FFF => self.handle_vram_write(addr, data),
+                0xA000..=0xBFFF => self.write_ram(addr, data),
+                0xD000..=0xDFFF //to be implemented, wram
+                0xE000..=0xFDFF =>{
+                    self.memory[addr - 0x2000 as usize] = data;
+                    self.memory[addr as usize] = data; 
+                }
+                0xFEA0..=0xFEFF => (),
+                JOYPAD_REGISTER_ADDR => self.handle_joypad,
+                DIVIDER_REGISTER_ADDR | CURRENT_SCANLINE_ADDR => self.memory[addr as usize] = 0,
+                0xFF46..= self.dma_transfer(data), //implement dma_transfer
+                0xFF4F..= self.vram_bank_switch(data),//implement vram_bank_switch
+                TIMER_CONTROL_ADDR => self.timer_control(data),
+                VRAM_DMA_TRANSFER_ADDR => {
+                    self.memory[addr as usize] = data;
+                }
+                WRAM_BANK_SELECT_ADDR => self.wram_bank_switch, //implement wram_bank_swtich
+                _ => self.memory[addr as usize] = data;
+            };
+        }
+    }
+
+    pub fn read_byte(&self, addr: Word) -> Byte{
+        //*    FE00 - FE9F	    Sprite attribute table (OAM)
+        let is_reading_restricted_oam = addr >= 0xFE00 && addr <= 0xFE9F && !self.oam;
+        let is_reading_restricted_vram = addr >= 0x8000 && addr <= 0x9FFF && !self.vram;
+
+        if is_reading_restricted_oam || is_reading_restricted_vram{
+            0xFF
+            /*
+            *    4000 - 7FFF	    16 KiB ROM Bank 01~NN	        From cartridge, switchable bank via mapper (if any)
+            *    8000 - 9FFF	    8 KiB Video RAM (VRAM)	        In CGB mode, switchable bank 0/1
+            */
+        } else if addr >= 0x4000 && addr < 0x8000{
+            self.read_rom(addr);
+        } else if addr >= 0xA000 && addr < 0xC000{
+            self.read_ram(addr);
+        } else{
+            self.memory[addr as usize];
+        }
+    }
+
     fn load_rom(&mut self){
         let end_address = 0x8000;
         for i in 0..cmp::min(end_address, self.rom.lenght()){
@@ -169,6 +218,10 @@ impl Mmu{
             Some(mbc) => mbc.handle_bank(addr, data);
             None => {},
         }
+    }
+
+    fn handle_vram_write(&mut self, addr: Word, data: Byte){
+
     }
 
     //I don't understand this, why 0x3?
