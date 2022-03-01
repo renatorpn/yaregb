@@ -1,13 +1,11 @@
 # YAREGB 🦀🎮
 
 ## About
-___
 YAREGB is **Y**et **A**nother **R**ust **E**mulator (for) **G**ame **B**oy.
 
 This is a study project and HEAVILY borrows code and observation from [rylev's book](https://github.com/rylev/DMG-01), [mooneyegb](https://github.com/Gekkio/mooneye-gb) and [rusty-boy](https://github.com/kbernst30/rusty-boy). Most of the documentation and code below to these and many other open source projects.
 
 ## Goals
-___
 The main goals of this project are:
 
 * Getting started in Rust and mess with pointers and bitwise operations
@@ -18,7 +16,6 @@ The main goals of this project are:
 
 
 ## To do
-__
 - [ ] Documentation
     - [ ] Add schematics and file layout
     - [ ] Add commentaries regarding RAM addr
