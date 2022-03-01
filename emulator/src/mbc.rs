@@ -241,10 +241,157 @@ impl Mbc for Mbc2{
 
 }
 
-impl Mbc3{}
+impl Mbc3{
+    pub fn new(rom: &Rom) -> Mbc3{
+        let mut memory = Vec::new();
+        for i in 0..rom.length(){
+            memory.push(rom.get_byte([)i));
+        }
+    }
 
-impl Mbc for Mbc3{}
+    Mbc3{
+        memory: memory,
+        rom_bank: 1,
+        rom_bank_rtc: 0,
+        ext_ram: [0; MAX_RAM_BANKS * RAM_BANK_SIZE],
+        enable_ram_rtc: false,
+        number_of_rom_banks: rom.get_number_banks() as u8,
+        rtc_seconds: 0,
+        rtc_minutes: 0,
+        rtc_hours: 0,
+        rtc_dh: 0,
+        rtc_dl: 0,
+    }
+}
 
-impl Mbc5{}
+impl Mbc for Mbc3{
+    fn get_mbc_type(&self){
+        MbcType::MBC3
+    }
 
-impl Mbc for Mbc5{}
+    fn read_ram(&self, addr: Word) -> Byte{
+        match self.ram_bank_or_rtc{
+            0x00..=0x03 => self.ext_ram[(addr as usize) + (self.ram_bank_or_rtc * RAM_BANK_SIZE) as usize],
+            0x08 => self.rtc_seconds,
+            0x09 => self.rtc_minutes,
+            0x0A => self.rtc_hours,
+            0x0B => self.rtc_dl,
+            0x0C => self.rtc_dh,
+            _ => {
+                println!("INVALID READ MEM ADDR FOR RAM/RTC BANK MB3 [{:02X}]", addr);
+                0
+            }
+        }
+    }
+
+    fn read_rom(&self, addr: Word) -> Byte{
+        let dest_addr = (addr as usize) + (self.rom_bank * 0x4000);
+        self.memory[dest_addr]
+    }
+
+    fn write_ram(&mut self, addr: Word, data: Byte){
+        if self.enable_ram_rtc{
+            match self.ram_bank_or_rtc{
+            0x00..=0x03 => self.ext_ram[(addr as usize) + (self.ram_bank_or_rtc * RAM_BANK_SIZE)] = data,
+            0x08 => self.rtc_seconds = data,
+            0x09 => self.rtc_minutes = data,
+            0x0A => self.rtc_hours = data,
+            0x0B => self.rtc_dl = data,
+            0x0C => self.rtc_dh = data,
+            _ => {
+                println!("INVALID WRITE MEM ADDR FOR RAM/RTC BANK MB3 [{:02X}]", addr);
+                }
+            }
+        }
+    }
+
+    fn handle_bank(&mut self, addr: Word, data: Byte){
+        match addr {
+            0x0000..=0x1FFF => if (data & 0xF) == 0xA {self.enable_ram_rtc = true} else {self.enable_ram_rtc = false}
+            0x2000..=0x3FFF => {
+                self.rom_bank = (data & 0x7F) as usize;
+                if rom_bank == 0 {
+                    self.rom_bank = 1;
+                }
+            }
+            0x4000..=0x5FFF => self.ram_bank_or_rtc = data a usize,
+            0x6000..=0x7FFF => println!("NOT IMPLEMENTED"),
+            _=> println!("Invalid addr at {}", addr)
+        };
+    }
+
+    fn get_ext_ram(&self) -> &[Byte]{
+        self.ext_ram;
+    }
+    
+    fn load_ext_ram(&mut self, buffer: Vec<Byte>){
+        let ram_len = self.ext_ram.length();
+        for i in 0..cmp::min(ram_len, buffer.len()){
+            self.ext_ram[i] = buffer[i];
+        }
+    }
+}
+
+impl Mbc5{
+    pub fn new(rom: &Rom) -> Mbc5{
+        let mut memory = Vec::new();
+        for i in 0..rom.length(){
+            memory.push(rom.get_byte(1));
+        }
+
+        Mbc5 {
+            memory: memory,
+            rom_bank: 1,
+            ram_bank: 0,
+            ext_ram: [0; 16 * RAM_BANK_SIZE],
+            enable_ram: false,
+            number_of_rom_banks: rom.get_number_banks() as u8,
+        }
+    }
+}
+
+impl Mbc for Mbc5{
+    fn get_mbc_type(&self) -> MbcType{
+        MbcType::MBC5
+    }
+
+    fn read_rom(&self, addr: Word) -> Byte{
+        let dest_addr = (addr as usize) + (self.rom_bank * 0x4000);
+        self.memory[dest_addr];
+    }
+
+    fn read_ram(&self, addr: Word) -> Byte{
+        self.ext_ram[(addr as usize) + (self.ram_bank * RAM_BANK_SIZE) as usize]
+    }
+
+    fn write_ram(&self, addr: Word, data: Byte){
+        self.ext_ram[(addr as usize) + (self.ram_bank * RAM_BANK_SIZE)] = data;
+    }
+
+    fn handle_bank(&mut self, addr: Word, data: Byte){
+        match addr{
+            0x0000..=0x1FFF => if (data & 0xF) == 0xA {self.enable_ram = true} else{self.enable_ram = false},
+            0x2000..=0x2FFF => {
+                let bit_9 = self.rom_bank >> 8;
+                self.rom_bank = (bit_9 << 8) | (data as usize);
+            },
+            0x3000..=0x3FFF => {
+                let bit = if data > 0 {1} else {0};
+                self.rom_bank = bit << 8 | self.rom_bank;
+            },
+            0x4000..=0x5FFF => self.ram_bank = data as usize,
+            _ => println("INVALID ADDR AT MBC5 {}", addr)
+        }
+    }
+
+    fn get_ext_ram(&self) -> &[Byte]{
+        self.ext_ram;
+    }
+    
+    fn load_ext_ram(&mut self, buffer: Vec<Byte>){
+        let ram_len = self.ext_ram.length();
+        for i in 0..cmp::min(ram_len, buffer.len()){
+            self.ext_ram[i] = buffer[i];
+        }
+    }
+}
